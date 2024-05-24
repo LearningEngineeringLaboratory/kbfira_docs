@@ -2,7 +2,7 @@
     "liveServer.settings.proxy": {
         "enable": true,
         "baseUri": "/",
-        "proxyUri": "http://localhost:8081/kbfira_doc_share/"
+        "proxyUri": "http://localhost:8081/kbfira_docs/"
     },
     "liveServer.settings.useWebExt": true,
 }
