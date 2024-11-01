@@ -128,8 +128,8 @@
     <div class="feedback-content"></div>
   </div>
   <div class="card-footer text-end">
-    <button class="btn btn-sm btn-secondary bt-cancel bt-close px-3"><?php echo Lang::l('ok'); ?></button>
-    <button class="btn btn-sm btn-primary bt-modify px-3 ms-1">マップ組み立てに戻る</button>
+    <!-- <button class="btn btn-sm btn-secondary bt-cancel bt-close px-3"><?php echo Lang::l('ok'); ?></button> -->
+    <button class="btn btn-sm btn-primary bt-modify px-3 ms-1">OK</button>
   </div>
 </div>
 
