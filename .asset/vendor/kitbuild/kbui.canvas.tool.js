@@ -3052,6 +3052,7 @@ handleEvent() {
   
       // ダイアログを閉じる
       if (this.dialog) this.dialog.hide();
+      //20241213test
   });
   
   
