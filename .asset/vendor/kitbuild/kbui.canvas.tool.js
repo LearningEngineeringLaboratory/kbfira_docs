@@ -1447,10 +1447,19 @@ class KitBuildBugTool extends KitBuildCanvasTool {
       let correctLabel = $('#bug-dialog .input-correct-label').val();
       this.node.data('correct-label', correctLabel);
       this.node.data('bug-label', bugLabel);
-      UI.info('Bug information has been set.').show();
+      //新しく追加したコードはここから
+      if (correctLabel) {
+        console.log('あいうえお');
+        UI.info('Bug information has been set.').show();
+        this.node.css('background-color', '#00ffff'); //ノードの色を変えるコード
+      } else {
+        UI.error('Bug information has not been set.').show(); //エラーメッセージを表示するコード
+      }
+      //ここまで
       if (this.dialog) this.dialog.hide();
-      // console.log(this.node.data(), correctLabel, bugLabel, this, this.dialog);
-    });
+      
+      console.log(this.node.data());
+});
 
     /**
      * bug-dialog（ツールのボタンが押された際に表示されるダイアログ）内のbt-remove-bug（"Remove Bug"ボタン）が押された際に発火する関数．"Bug Label"のフォームを空にし，node.dataからcorrect-labelとbug-labelを削除する．
@@ -1468,6 +1477,8 @@ class KitBuildBugTool extends KitBuildCanvasTool {
     });
   }
 }
+
+
 
 class KitBuildCanvasToolCanvas {
   constructor(canvas, options) {
@@ -2947,6 +2958,116 @@ class UndoRedoSwitch {
     canvas.cy.edges(priorIds.join(", ")).remove();
     canvas.cy.add(data.later);
   }
+}
+
+
+class KitBuildBaseTool extends KitBuildCanvasTool {
+  constructor(canvas, options) {
+    super(
+      canvas,
+      Object.assign(
+        {
+            showOn: KitBuildCanvasTool.SH_CONCEPT | KitBuildCanvasTool.SH_LINK,
+            dialogContainerSelector: 'body',
+            color: "#dc3545",
+            width: '300px',
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-card-checklist" viewBox="-4 -4 24 24"><path d="M14.5 3a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5zm-13-1A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2z"/><path d="M7 5.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 1 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0M7 9.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m-1.496-.854a.5.5 0 0 1 0 .708l-1.5 1.5a.5.5 0 0 1-.708 0l-.5-.5a.5.5 0 0 1 .708-.708l.146.147 1.146-1.147a.5.5 0 0 1 .708 0"/></svg>',
+            gridPos:{ x: 1, y: 1 },
+        },
+          options
+      )
+    );  
+    this.handleEvent();
+  }
+
+  action(event, e, nodes) {
+    this.node = nodes[0];
+    // const $list = $('.base-list');
+    // $list.data();
+    this.broadcastEvent(`action`, {node: this.node.data()});
+    return;
+  }
+  
+handleEvent() {
+  //リスト作成用(Addボタンの操作,makekit.jsとrecompose.js併用)
+  $('#base-dialog').on('click', '.bt-base-Add', (e) => {
+    let baseLabel = $('#base-dialog .base-textbox').val().trim(); // 前後の空白を削除
+    if (baseLabel) {
+      const $select = $('.base-select');
+      const $option = $('<option>', {
+      text: baseLabel,    // 表示されるテキスト
+      value: baseLabel    // 値として保持されるデータ
+    });
+    $select.append($option);
+    }
+    //this.node.data('label', baseLabel);
+    this.node.data('bt-set-base', baseLabel);
+    this.node.data('set-base-label', baseLabel);
+    this.updateNodeSize(this.node);
+    if (baseLabel) {
+      UI.info('Information has been added.').show();
+        
+    }
+    else{
+      UI.error('Information has not been set.').show(); //エラーメッセージを表示するコード
+    }
+  });
+    //リストから要素を取り出す(Getボタンの操作)
+    $('#base-dialog').on('click', '.bt-base-Get', (e) => {
+      const selectedValue = $('.base-select').val(); // 選択された値を取得
+      if (selectedValue) {
+          // 選択された値をノードのデータに設定
+          let baseLabel = this.node.data('label');
+          if(baseLabel!=="?"){
+            if (baseLabel) {
+              const $select = $('.base-select');
+              const $option = $('<option>', {
+              text: baseLabel,    // 表示されるテキスト
+              value: baseLabel    // 値として保持されるデータ
+            });
+            $select.append($option);
+            }
+          }
+          
+          
+          this.node.data('label', selectedValue);
+          this.updateNodeSize(this.node);
+                   // リストから選択された値を削除
+          const selectElement = document.querySelector('.base-select');
+          const selectedOption = selectElement.querySelector(`option[value="${selectedValue}"]`);
+
+          
+
+
+
+          if (selectedOption) {
+              selectedOption.remove();
+              console.log(`Removed: ${selectedValue} from the list`);
+          } else {
+              console.error('Option not found in the list.');
+          }
+      } else {
+          UI.error('Item is not selected.').show();
+      }
+  
+      // ダイアログを閉じる
+      if (this.dialog) this.dialog.hide();
+  });
+  
+  
+//共通のcancelボタン
+  $('#base-dialog').on('click', '.bt-base-Cancel', (e) => {
+    this.dialog.hide();
+  });
+
+  
+}
+updateNodeSize(node) {
+  this.nodeCreateTool = new NodeCreationTool(this.canvas, {});
+  let dim = this.nodeCreateTool.calculateDimension(node.data());
+  this.node.css('width', dim.w);
+  this.node.css('height', dim.h);
+}
 }
 
 class UndoRedoCentroid {

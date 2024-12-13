@@ -190,3 +190,15 @@
     </form>
   </div>
 </div>
+
+<!-- //baseで追加したボタンが押されたときに表示したいダイアログ -->
+<div id="base-dialog" class="align-items-center" style="display: none;">
+  <div class="card">
+    <div class="card-body">
+      <div class="d-flex justify-content-end">
+        <button class="btn btn-sm btn-light bt-agree" type="button">賛成</button>
+        <button class="btn btn-sm btn-light bt-question ms-1" type="button">疑問</button>
+      </div>
+    </div>
+  </div>
+</div>

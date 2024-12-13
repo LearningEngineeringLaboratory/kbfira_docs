@@ -220,10 +220,110 @@ class TextApp {
       })
     })
 
+//20241203ここから 
 
+    /**
+     * form-manage-candidatesフォーム（bt-searchを含んでいるフォーム）が送信された際に発火する関数．DBに登録されている候補のうち，現在注目しているテキストに対応するものを取得した後，populateManageCandidates()によってそれらのHTMLをページごとに生成し，アイアログ内に表示する．
+     * @param {e} e 現在発火しているclickイベント
+     * @todo Paginationクラスについて勉強してコメントを入れる
+     */
+    $('form.form-manage-candidates').on('submit', (e) => {
+      e.preventDefault();
+      e.stopPropagation(); // 親要素へのイベントの伝播を停止
 
+      let perpage = parseInt($('form.form-manage-candidates .input-perpage').val());
+      let keyword = $('form.form-manage-candidates .input-keyword').val();
 
+      console.log(TextApp.manageCandidatesPagination);
+      if (!TextApp.manageCandidatesPagination) {
+        TextApp.manageCandidatesPagination = Pagination.instance('form.form-manage-candidates .list-candidate-pagination', 1, perpage);
+        TextApp.manageCandidatesPagination.update(1, perpage).keyword = keyword;
+        TextApp.manageCandidatesPagination.listen('form.form-manage-candidates');
+      }
 
+      let page = TextApp.manageCandidatesPagination.page;
+      if (keyword != TextApp.manageCandidatesPagination.keyword) {
+        page = 1;
+        TextApp.manageCandidatesPagination.page;
+      }
+
+      Promise.all([
+        //console.log(candidateDialog.tid, page, perpage),
+        this.ajax.post(`contentApi/getCandidatesPerPage/${candidateDialog.tid}/${page}/${perpage}`, {
+          keyword: keyword
+        }), 
+        this.ajax.post(`contentApi/getCandidatesCount/${candidateDialog.tid}`, {
+          keyword: keyword
+        })])
+      .then(results => {
+        let [candidates_object, count] = results;
+        //let [count, candidates_object] = results;
+        console.log(results);
+        console.log(candidates_object);
+        console.log(count);
+        let candidates = [];
+        candidates_object.forEach((candidate_object) => {
+          candidates.push(candidate_object.list);
+          console.log();
+        });
+        console.log(candidates);
+        TextApp.populateManageCandidates(candidates, candidateDialog.tid);
+        TextApp.manageCandidatesPagination.page = page;
+        TextApp.manageCandidatesPagination.update(count, perpage).keyword = keyword;  
+      });
+
+    });
+
+    /**
+     * バグが追加された部品のラベルを修正する際のautocompleteの候補を管理するためのダイアログ
+     * @type {Modal}
+     * @memberof TextApp#
+     */
+    let candidateDialog = UI.modal('#candidate-dialog', {
+      hideElement: '.bt-close',
+      width: '1200px',
+    });
+
+    /**
+     * list-text（テキストのリスト）内のbt-candidate（緑のボタン）が押された際に発火する関数．candidate-dialogを表示する．
+     * @param {e} e 現在発火しているclickイベント
+     */
+    $('#list-text').on('click', '.bt-candidate', (e) => {
+      let tid = $(e.currentTarget).parents('.text-item').attr('data-tid');
+      console.warn(tid);
+      candidateDialog.tid = tid;
+      //$('form.form-manage-candidates').trigger('submit'); // ダイアログが開く前に予め候補のリストを表示させておく
+      candidateDialog.show();
+    })
+
+    $('#candidate-dialog .bt-ok').on('click', (e) => {
+      // console.warn(candidateDialog.tid);
+
+      let candidate = $('.input-candidate').val();
+      let candidates = [];
+      
+      if (candidate != '') {
+        this.ajax.get(`contentApi/getCandidate/${candidateDialog.tid}`).then(candidates_object => {
+            candidates_object.forEach((candidate_object) => {
+              candidates.push(candidate_object.candidate);
+          });
+          console.log(candidates);
+        }).then(() => {
+          if (candidates.includes(candidate)) {
+            UI.error('The candidate you entered has already been registered.').show();
+          }
+          else {
+            this.ajax.post(`ContentApi/addCandidate/${candidateDialog.tid}/${candidate}`).then(() => {
+              UI.success('Candidate has been saved successfully.').show();
+              $('.input-candidate').val('');
+              $('form.form-manage-candidates').trigger('submit'); // ダイアログ右側の候補のリストを更新
+            });
+          }
+        }).catch(error => { UI.error(error).show(); });
+      }
+    })
+    
+//ここまで
 
 
 
@@ -269,6 +369,7 @@ TextApp.populateTexts = texts => {
     textsHtml += `    <button class="btn btn-sm btn-secondary bt-detail"><i class="bi bi-journal-text"></i></button>`
     textsHtml += `    <button class="btn btn-sm btn-primary bt-nlp">AI</button>`
     textsHtml += `    <button class="btn btn-sm btn-warning bt-edit"><i class="bi bi-pencil"></i></button>`
+    textsHtml += `    <button class="btn btn-sm btn-success bt-candidate"><i class="bi bi-list-ul"></i></button>`
     textsHtml += `    <button class="btn btn-sm btn-danger bt-delete"><i class="bi bi-trash"></i></button>`
     textsHtml += `  </span>`
     textsHtml += `</div>`
@@ -328,6 +429,24 @@ TextApp.populateTextDetail = text => {
   $('#detail-text').html(textDetailHtml)
   hljs.highlightAll();
 
+}
+
+TextApp.populateManageCandidates = (candidates, tid) => {
+  let candidatesHtml = '';
+  candidates.forEach(candidate => {
+    candidatesHtml += `<div class="item-candidate d-flex align-items-center py-1 border-bottom" role="button"`
+    candidatesHtml += `  data-candidatename="${candidate}" data-tid="${tid}" style="min-width:0">`
+    candidatesHtml += `  <input type="checkbox" data-candidatename="${candidate}" data-tid="${tid}">`
+    candidatesHtml += `  <span class="flex-fill ps-2 d-flex align-items-center">`
+    candidatesHtml += `  <span class="candidate-truncate" style="min-width:0">${candidate}`
+    candidatesHtml += `  </span>`
+    candidatesHtml += `  </span>`
+    candidatesHtml += `  <span class="badge rounded-pill bg-danger bt-delete-candidate"><i class="bi bi-trash"></i></span>`
+    candidatesHtml += `</div>`
+  });
+  if (candidatesHtml.length == 0) candidatesHtml = '<em class="d-block m-3 candidate-muted">No candidates found in current search.</em>';
+  $('form.form-manage-candidates .list-candidate').html(candidatesHtml)
+  //$('form.form-manage-candidates .ここを変える').html(candidatesHtml)
 }
 
 $(() => {

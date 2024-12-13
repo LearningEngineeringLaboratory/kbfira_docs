@@ -27,12 +27,12 @@ class KitBuildApp {
     canvas.toolbar.render();
 
     canvas.addCanvasTool(KitBuildCanvasTool.CENTROID);
-
     this.canvas = canvas;
     this.session = Core.instance().session();
     this.ajax = Core.instance().ajax();
     this.runtime = Core.instance().runtime();
     this.config = Core.instance().config();
+
 
     // Hack for sidebar-panel show/hide
     // To auto-resize the canvas.
@@ -65,6 +65,15 @@ class KitBuildApp {
       canvas.on("event", KitBuildApp.loggerListener);
     }
 
+    this.baseTool = new KitBuildBaseTool(canvas, {
+      dialogContainerSelector: '#admin-content-panel',
+      // showOn: KitBuildCanvasTool.SH_CONCEPT, // 必要であれば，元のツールのプロパティを上書きすることもできる
+    });
+    this.baseTool.on('event', this.onBaseToolEvent.bind(this));
+  this.baseTool.showOn = (what, node) => { // これはshowOnを書き換えているだけのように見えるので，もしかしたら必須ではないかも
+    return (what & this.baseTool.settings.showOn);
+  }
+  canvas.canvasTool.addTool("base", this.baseTool);
 
     // console.log(this, typeof KitBuildLogger);
 
@@ -295,6 +304,11 @@ class KitBuildApp {
   }
 
   handleEvent() {
+    this.baseDialog = UI.modal('#base-dialog', {
+      hideElement: '.bt-close',
+    });
+this.baseTool.dialog = this.baseDialog;
+
     let saveAsDialog = UI.modal("#kit-save-as-dialog", {
       onShow: () => {
         if (saveAsDialog.kitMap) {
@@ -1368,6 +1382,20 @@ class KitBuildApp {
       // listen to events for broadcast to collaboration room as commands
       this.canvas.on("event", KitBuildApp.onCanvasEvent);
     });
+  }
+  //baseの処理
+  onBaseToolEvent(canvasId, event, data, options) {
+    switch(event) {
+        case 'action':
+          let node = this.canvas.cy.nodes(`#${data.node.id}`); // 現在発火しているイベントに対応する部品のオブジェクトを取得
+          this.baseDialog.show({width: '300px'});
+          $('#base-dialog .bt-agree').off('click').on('click', (e) => {
+            node.css('background-color', '#00ffff');
+          });
+          $('#base-dialog .bt-question').off('click').on('click', (e) => {
+            node.css('background-color', '#ff00ff');
+        });
+    }
   }
 
   initCollab(user) {

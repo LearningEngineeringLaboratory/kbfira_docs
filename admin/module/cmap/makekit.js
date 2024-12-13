@@ -371,6 +371,20 @@ class MakeKitApp {
     this.bugTool.on('event', this.onBugToolEvent.bind(this));
     canvas.canvasTool.addTool("bug", this.bugTool);
 
+
+
+        //base機能
+        this.baseTool = new KitBuildBaseTool(canvas, {
+          dialogContainerSelector: '#admin-content-panel',
+          showOn: KitBuildCanvasTool.SH_CONCEPT, // 必要であれば，元のツールのプロパティを上書きすることもできる
+        });
+        this.baseTool.on('event', this.onBaseToolEvent.bind(this));
+        this.baseTool.showOn = (what, node) => { // これはshowOnを書き換えているだけのように見えるので，もしかしたら必須ではないかも
+          return (what & this.baseTool.settings.showOn);
+        }
+        canvas.canvasTool.addTool("base", this.baseTool);
+
+
     this.canvas = canvas;
     this.session = Core.instance().session();
     this.ajax = Core.instance().ajax();
@@ -562,6 +576,12 @@ class MakeKitApp {
    * @memberof MakeKitApp
    */
   handleEvent() {
+      // 20241125キットにもいると思って書いてみた
+      this.baseDialog = UI.modal('#base-dialog', {
+        hideElement: '.bt-close',
+      });
+      this.baseTool.dialog = this.baseDialog;
+
 
     let saveAsDialog = UI.modal('#kit-save-as-dialog', {
       onShow: () => { 
@@ -1498,6 +1518,24 @@ class MakeKitApp {
         $('#bug-dialog .input-correct-label').val(node['correct-label'] ? node['correct-label'] : node['label']);
         $('#bug-dialog .input-bug-label').val(node['bug-label']);
         break;
+    }
+  }
+
+  onBaseToolEvent(canvasId, event, data, options) {
+    switch(event) {
+        case 'action':
+          //let node = data.node;
+          let node = this.canvas.cy.nodes(`#${data.node.id}`); // 現在発火しているイベントに対応する部品のオブジェクトを取得
+          this.baseDialog.show({width: '300px'});
+          //this.node.data();
+          $('#base-dialog .base-textbox').val( node['label'] ? node['label'] : "?");
+          $('#base-dialog .base-textbox').val(node['label']);
+          $('#base-dialog .bt-agree').off('click').on('click', (e) => {
+          node.css('background-color', '#00ffff');
+          });
+          $('#base-dialog .bt-question').off('click').on('click', (e) => {
+            node.css('background-color', '#ff00ff');
+        });
     }
   }
   

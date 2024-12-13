@@ -498,5 +498,61 @@ class ContentApiController extends CoreApi {
       CoreError::instance($ex->getMessage())->show();
     }
   }
+  //20241129safi用
+  function getSelectAndFillInList($tid) {//function getSelectAndFillInList($cmid)
+    try {
+      $textService = new TextService();
+      $text = $textService->getSelectAndFillInList($tid);
+      CoreResult::instance($text)->show();
+      return;
+    } catch (Exception $ex) {
+      CoreError::instance($ex->getMessage())->show();
+    }
+  }
 
+//20241204ここから
+  function getAllCandidates() {
+    $TextService = new TextService();
+    $candidates = $TextService->getAllCandidates();
+    CoreResult::instance($candidates)->show();
+}
+//20241204ここまで
+
+  //20241203ここから
+function getCandidate($tid) {
+  $TextService = new TextService();
+  $candidate = $TextService->getCandidate($tid);
+  CoreResult::instance($candidate)->show();
+}
+
+function addCandidate($tid, $candidate) {
+  $TextService = new TextService();
+  $result = $TextService->addCandidate($tid, $candidate);
+  return CoreResult::instance($result)->show();   
+}
+
+function getCandidatesPerPage($tid, $page = 1, $perpage = 10) {
+  try {
+    $keyword = $this->postv('keyword', ''); // こういう書き方をすると，ajax.post()で第2引数に指定したオブジェクトに含まれる値を取ってこれるっぽい
+    // $created = $this->postv('created');
+    $TextService = new TextService();
+    $candidates = $TextService->getCandidatesPerPage($tid, $keyword, $page, $perpage);
+    CoreResult::instance($candidates)->show();
+  } catch (Exception $ex) {
+    CoreError::instance($ex->getMessage())->show();
+  }
+}
+
+function getCandidatesCount($tid) {
+  try {
+    $keyword = $this->postv('keyword', '');
+    $TextService = new TextService();
+    $count = $TextService->getCandidatesCount($tid, $keyword);
+    CoreResult::instance($count->count)->show();
+  } catch (Exception $ex) {
+    CoreError::instance($ex->getMessage())->show();
+  }
+}
+
+//20241203ここまで
 }

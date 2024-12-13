@@ -95,4 +95,77 @@ class TextService extends CoreService {
     return $db->getRow($qb->get());
   }
 
+//   function getSelectAndFillInList($tid) {
+//       try {
+//           $db = self::instance();
+//           $result = $db->query("SELECT * FROM list_label WHERE tid=$tid");
+//           return $result;
+//       } catch (Exception $ex) {
+//           throw CoreError::instance($ex->getMessage());
+//       }
+// }
+
+//20241204ここから
+function getAllCandidates() {
+  try {
+      $db = self::instance();
+      $result = $db->query("SELECT list FROM list_label");
+      return $result;
+  } catch (Exception $ex) {
+      throw CoreError::instance($ex->getMessage());
+  }
+}
+//20241204ここまで
+
+//20241203ここから
+function getCandidate($tid) {
+  try {
+      $db = self::instance();
+      $result = $db->query("SELECT * FROM list_label WHERE tid=$tid");
+      return $result;
+  } catch (Exception $ex) {
+      throw CoreError::instance($ex->getMessage());
+  }
+}
+
+
+
+function addCandidate($tid, $list) {
+  try {
+      $db = self::instance();
+      
+      // $listをUTF-8に変換
+      //$list = mb_convert_encoding($list, 'UTF-8', 'auto');
+      
+      $result = $db->query("INSERT INTO list_label(tid, list) values($tid, '$list')");
+      return $result;
+  } catch (Exception $ex) {
+      throw CoreError::instance($ex->getMessage());
+  }
+}
+
+
+
+function getCandidatesPerPage($tid, $keyword, $page, $perpage) {
+  try {
+      $db = self::instance();
+      $limit_start = ($page-1)*$perpage;
+      $result = $db->query("SELECT * FROM list_label WHERE tid=$tid AND list LIKE '%$keyword%' LIMIT $limit_start, $perpage");
+      return $result;
+  } catch (Exception $ex) {
+      throw CoreError::instance($ex->getMessage());
+  }
+}
+
+function getCandidatesCount($tid, $keyword = '') {
+  try {
+      $db = self::instance();
+      $result = $db->query("SELECT COUNT(list) AS count FROM list_label WHERE tid=$tid AND list LIKE '%$keyword%'");
+      return $result[0];
+  } catch (Exception $ex) {
+      throw CoreError::instance($ex->getMessage());
+  }
+}
+
+//20241203ここまで
 }

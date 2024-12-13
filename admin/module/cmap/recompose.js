@@ -2,6 +2,14 @@ $(() => { // jQuery onReady callback
   let app = RecomposeApp.instance()
 })
 
+//2024/12/11ここから
+// short hand for logger class
+// so to log something, one could simply use:
+// // Log.l('action', data);
+// class L {
+//   static log() { }
+// }
+//2024/12/11ここまで
 class RecomposeApp {
   constructor() {
     this.kbui = KitBuildUI.instance(RecomposeApp.canvasId)
@@ -53,7 +61,43 @@ class RecomposeApp {
     this.session = Core.instance().session();
     this.ajax = Core.instance().ajax();
     this.config = Core.instance().config();
-    
+
+    // //2024/12/11ここから
+    //     // Logger
+    //     if (typeof KitBuildLogger != "undefined") {
+    //       let sessid = Core.instance().config().get("sessid");
+    //       let url = Core.instance().config().get('baseurl')
+    //       let seq = Core.instance().config().get("seq");
+    //       window.history.replaceState({}, document.title, url);
+    //       this.logger = KitBuildLogger.instance(
+    //         null,
+    //         seq ?? 0,
+    //         sessid,
+    //         canvas,
+    //         null
+    //       ).enable();
+    //       if (this.logger.seq != 0) this.seq = seq;
+    //       KitBuildApp.loggerListener = this.logger.onCanvasEvent.bind(this.logger);
+    //       L.log = this.logger.log.bind(this.logger);
+    //       L.log(`init-${this.constructor.name}`);
+    //       canvas.on("event", KitBuildApp.loggerListener);
+    //     }
+
+        //2024/12//11ここまで
+
+// kb班で作ったbaseボタンが押されたときに処理される機能
+// kb班で作ったbaseボタンが押されたときに処理される機能
+this.baseTool = new KitBuildBaseTool(canvas, {
+  dialogContainerSelector: '#admin-content-panel',
+  // showOn: KitBuildCanvasTool.SH_CONCEPT, // 必要であれば，元のツールのプロパティを上書きすることもできる
+});
+this.baseTool.on('event', this.onBaseToolEvent.bind(this));
+this.baseTool.showOn = (what, node) => { // これはshowOnを書き換えているだけのように見えるので，もしかしたら必須ではないかも
+return (what & this.baseTool.settings.showOn && node.data(  ));
+}
+canvas.canvasTool.addTool("base", this.baseTool);
+
+
     // Hack for sidebar-panel show/hide
     // To auto-resize the canvas.
     let observer = new MutationObserver((mutations) => $(`#${RecomposeApp.canvasId} > div`).css('width', 0))
@@ -73,6 +117,7 @@ class RecomposeApp {
       canvas.on("event", RecomposeApp.loggerListener)
     }
 
+
     this.handleEvent();
     this.handleRefresh();
 
@@ -82,6 +127,8 @@ class RecomposeApp {
     RecomposeApp.inst = new RecomposeApp()
     return RecomposeApp.inst;
   }
+
+
 
   setConceptMap(conceptMap) { console.warn("CONCEPT MAP SET:", conceptMap)
     this.conceptMap = conceptMap
@@ -153,7 +200,10 @@ class RecomposeApp {
   }
 
   handleEvent() {
-  
+
+
+
+
     let saveAsDialog = UI.modal('#kit-save-as-dialog', {
       onShow: () => { 
         if (saveAsDialog.kitMap) { // means save existing kit...
@@ -294,8 +344,28 @@ class RecomposeApp {
       } else UI.warning('No node selected.').show();
     });
   
-  
-  
+  //base
+    this.baseDialog = UI.modal('#base-dialog', {
+      hideElement: '.bt-close',
+    });
+    this.baseTool.dialog = this.baseDialog;
+
+    // $('#base-dialog ').on('click', '.bt-base-Get', (e) => {
+    //   const selectedValue = $('.base-select').val(); // 選択された値を取得
+    //   if (selectedValue) {
+    //     //this.node.data('label', selectedValue);
+    //     let dim = this.nodeCreateTool.calculateDimension(this.baseDialog.node.data());
+    //     this.baseDialog.node.css('width', dim.w);
+    //     this.baseDialog.node.css('height', dim.h);
+    //     this.baseDialog.hide();
+    //   }
+    //   else {
+    //     UI.error('Item is not selected.').show();
+    //   }
+    // });
+
+    
+
   
   
   
@@ -738,7 +808,6 @@ class RecomposeApp {
   
         }).show()
     })
-  
   }
 
   onTextSelectionToolEvent(canvasId, event, data, options) {
@@ -826,8 +895,64 @@ class RecomposeApp {
         break;
     }
   }
+  //baseボタンが押されたときの動作
+  onBaseToolEvent(canvasId, event, data, options) {
+    // クラスまたはコンポーネントのプロパティとして候補リストを保存
+this.candidatesCache = null; // 初期状態はnull
 
-  
+switch (event) {
+    case 'action':
+        // キャッシュがある場合はSQLリクエストを省略
+        if (this.candidatesCache) {
+            console.log('Using cached candidates:', this.candidatesCache);
+
+            // キャッシュを使ってselect要素を更新
+            updateSelectElement(this.candidatesCache);
+        } else {
+            // SQLリクエストを送信してデータを取得
+            this.ajax.get(`contentApi/getAllCandidates/`).then(candidates_object => {
+                console.log('Fetched candidates from server:', candidates_object);
+
+                // データをキャッシュ
+                this.candidatesCache = candidates_object;
+
+                // 候補リスト作成
+                updateSelectElement(candidates_object);
+                
+            });
+        }
+
+        // ノード情報の取得とダイアログ表示
+        let node = this.canvas.cy.nodes(`#${data.node.id}`);
+        this.baseDialog.show({ width: '300px' });
+        break;
+
+    default:
+        console.log('No matching case for event:', event);
+}
+
+// 候補リストを使って select 要素を更新する関数
+function updateSelectElement(candidates_object) {
+    const listArray = candidates_object.map(item => item.list);
+
+    // select 要素を取得
+    const selectElement = document.querySelector('.form-select.base-select');
+
+    // select 要素が空の場合のみ候補を追加
+    if (selectElement.options.length === 0) {
+        listArray.forEach(candidate => {
+            console.log(candidate);
+            const optionElement = document.createElement('option');
+            optionElement.value = candidate; // 値として設定
+            optionElement.textContent = candidate; // 表示テキストとして設定
+            selectElement.appendChild(optionElement); // select に追加
+        });
+    } else {
+        console.log('Select element already populated.');
+    }
+}
+
+}
   /**
    * 
    * Handle refresh web browser

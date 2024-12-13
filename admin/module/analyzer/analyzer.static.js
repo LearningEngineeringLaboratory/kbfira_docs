@@ -394,6 +394,16 @@ class StaticAnalyzerApp {
         UI.dialog("Please select a concept map.").show();
         return;
       }
+//20241129kb班ここから
+// 各ノードのスタイルを表示
+const nodes = this.canvas.cy.nodes();
+//const nodes = cy.nodes(); 
+  // すべてのノードを選択
+// 各ノードのスタイルを表示
+nodes.forEach(node => {
+  console.log(node.data())
+  });
+//ここまで
       KitBuild.openConceptMap(openDialog.cmid)
         .then((conceptMap) => {
           // console.log(conceptMap)

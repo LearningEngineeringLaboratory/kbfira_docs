@@ -297,3 +297,29 @@
     </div>
   </div>
 </div>
+
+<!-- safi -->
+<div id="base-dialog" class="align-items-center" style="display: none;">
+  <div class="card">
+    <div class="card-body">
+      <!-- 新しい入力欄とボタン群 -->
+      <div class="mt-3">
+        <p class="mb-2">リストに追加するラベルを入力してください</p>
+        <input type="text" class="form-control mb-2 base-textbox" placeholder="入力してください">
+      </div>
+      <!-- リスト表示部分 -->
+      <div class="mt-3">
+        <p class="mb-2">入力された値:</p>
+        <select class="form-select base-select" size="5" style="max-height: 150px; overflow-y: auto;overflow-x: auto;"></select>
+      </div>
+      <div class="mt-3 d-flex justify-content-end">
+      <button class="btn btn-sm btn-primary bt-base-Add me-2" type="button">Add</button>
+      <button class="btn btn-sm btn-secondary bt-base-Cancel " type="button">Cancel</button>
+      </div>
+      <!-- <div class="mt-3">
+        <p class="mb-2">入力された値:</p>
+        <ul class="list-group base-list" style="max-height: 150px; overflow-y: auto;"></ul>
+      </div> -->
+    </div>
+  </div>
+</div>

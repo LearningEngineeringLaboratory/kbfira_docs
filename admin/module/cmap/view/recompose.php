@@ -134,7 +134,7 @@
   </div>
 </div>
 
-<div id="bug-dialog" class="card d-none">
+<!-- <div id="bug-dialog" class="card d-none">
   <h6 class="card-header d-flex">
     <span class="drag-handle flex-fill">
       <i class="dialog-icon bi bi-bug-fill me-2 text-danger"></i> 
@@ -146,5 +146,31 @@
   </div>
   <div class="card-footer text-end">
     <button class="btn btn-sm btn-secondary bt-cancel bt-close px-3"><?php echo Lang::l('ok'); ?></button>
+  </div>
+</div> -->
+
+<!-- safi -->
+<div id="base-dialog" class="align-items-center" style="display: none;">
+  <div class="card">
+    <div class="card-body">
+      <!-- 新しい入力欄とボタン群 -->
+      <!-- <div class="mt-3">
+        <p class="mb-2">ブランクにセットする言葉を入力してください</p>
+        <input type="text" class="form-control mb-2 base-textbox" placeholder="入力してください">
+        <div class="d-flex justify-content-end">
+
+        </div> 
+      </div> -->
+      <!-- リスト表示部分 -->
+      <div class="mt-3">
+        <p class="mb-2">ラベルリスト</p>
+        <select class="form-select base-select" size="5" style="max-height: 150px; overflow-y: auto;overflow-x: auto;"></select>
+      </div>
+      <div class="mt-3 d-flex justify-content-end">
+      
+        <button class="btn btn-sm btn-dark bt-base-Get me-2" type="button">Set</button>
+        <button class="btn btn-sm btn-secondary bt-base-Cancel ms-1" type="button">Cancel</button>
+      </div>
+    </div>
   </div>
 </div>
